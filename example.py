@@ -8,8 +8,8 @@ pv=PVEmu.PVEmu()
 pv.connectToSupply()
 pv.identification()
 pv.setLogInterval(.05)        #log each 50ms
-
-pv.start(3.3,0.01)            # start thread: 1V, 0.01A
+pv.setVoltageOffset(.7)       #voltage offset due to the diode at output
+pv.start(3.3,0.01)            # start thread: 3.3V, 0.01A
 time.sleep(5)
 pv.setOperatingPoint(3.3,0.5) # another Irradiance ..
 time.sleep(5)

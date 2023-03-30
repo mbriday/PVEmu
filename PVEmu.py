@@ -12,14 +12,17 @@ class PVEmu:
     """
 
     def __init__(self):
-        self.ps = None          #handler to the serial port
-        self.logInterval = 0.100 #duration between logs, in s
-        self.log = []           # tuple (date(s), voltage ,current, actualVoltage, actualCurrent)
-        self.voltageSetpoint = 0.0 #V
-        self.currentSetpoint = 0.0 #I
-        self.mainThread = None     #Thread handler.
+        self.ps = None                   # handler to the serial port
+        self.logInterval = 0.100         # duration between logs, in s
+        self.log = []                    # tuple (date(s), voltage ,current, actualVoltage, actualCurrent)
+        self.voltageSetpoint = 0.0       # V
+        self.currentSetpoint = 0.0       # I
+        self.voltageOffset = 0.0
+        self.currentOffset = 0.0
+        
+        self.mainThread = None           #Thread handler.
         self.dataLock = threading.Lock()
-        self.run = False #thread is running
+        self.run = False                 #thread is running
 
     def connectToSupply(self):
         self.ps = None
@@ -61,11 +64,17 @@ class PVEmu:
             sys.stderr.write ("ERROR: try to work on closed port "+self.ps.name()+"\n")
             sys.exit(1)
 
+    def setVoltageOffset(self,offset):
+        self.voltageOffset = offset
+
+    def setCurrentOffset(self,offset):
+        self.currentOffset = offset
+
     def setOperatingPoint(self,voltage, current):
         self.checkconnected()
         with self.dataLock:
-            self.voltageSetpoint = voltage
-            self.currentSetpoint = current
+            self.voltageSetpoint = voltage + self.voltageOffset
+            self.currentSetpoint = current + self.currentOffset
         s='VSET1:'+str(voltage)+'\n'
         self.ps.write(s.encode())
         s='ISET1:'+str(current)+'\n'
@@ -133,7 +142,7 @@ class PVEmu:
         else:
             # setup ..
             self.connectToSupply()
-            self.setOperatingPoint(Vinit,Iinit)
+            self.setOperatingPoint(Vinit+0.7,Iinit)
             self.setOutput(True)
             self.log = []
             # .. and run
